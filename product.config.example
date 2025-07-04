@@ -1,0 +1,15 @@
+# Product Configuration Example
+# Copy this to apps/<product>/product.config to customize settings
+
+# Development port
+PORT=3004
+
+# Product display name
+NAME="My Product"
+
+# Product description
+DESCRIPTION="Description of my product"
+
+# Additional environment variables
+# NODE_ENV=development
+# API_URL=http://localhost:8080

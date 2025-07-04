@@ -1,0 +1,33 @@
+{
+  "name": "@digital-platform/ui",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "license": "MIT",
+  "files": [
+    "dist/**",
+    "src/styles/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "generate:component": "turbo gen react-component"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^8.48.0",
+    "react": "^18.2.0",
+    "tsup": "^6.7.0",
+    "typescript": "^5.2.0"
+  },
+  "dependencies": {
+    "@digital-platform/config": "*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  }
+}

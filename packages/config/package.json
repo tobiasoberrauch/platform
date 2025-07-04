@@ -1,0 +1,27 @@
+{
+  "name": "@digital-platform/config",
+  "version": "1.0.0",
+  "description": "Shared configuration for the digital platform",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "license": "MIT",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.2",
+    "eslint": "^8.48.0",
+    "tsup": "^6.7.0",
+    "typescript": "^5.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
