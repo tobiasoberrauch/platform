@@ -11,6 +11,7 @@ export * from './components/ChartCard';
 export * from './components/IconCircle';
 export * from './components/AppSelectorDropdown';
 export * from './components/ImprovedNavbar';
+export * from './components/AdminPermissionManager';
 
 // Note: To use the global styles in your app, import them in your app's root layout or _app file:
 // import '@digital-platform/ui/styles/globals.css';

@@ -15,6 +15,10 @@ NC := \033[0m # No Color
 TURBO := npx turbo
 NPM := npm
 
+# Configurable IP range settings
+PORT_RANGE_START ?= 3000
+PORT_RANGE_SIZE ?= 4
+
 # Auto-discover all apps
 APPS := $(notdir $(wildcard apps/*))
 
@@ -23,8 +27,8 @@ define get_port
 $(shell if [ -f apps/$(1)/product.config ]; then grep -E '^PORT=' apps/$(1)/product.config | cut -d'=' -f2; else echo $(2); fi)
 endef
 
-# Default ports (used if not specified in product.config)
-DEFAULT_PORTS := platform:3000 benchmark:3001 csrd:3002 support:3003
+# Default ports (calculated from configurable range)
+DEFAULT_PORTS := platform:$(PORT_RANGE_START) benchmark:$(shell echo $$(($(PORT_RANGE_START) + 1))) csrd:$(shell echo $$(($(PORT_RANGE_START) + 2))) support:$(shell echo $$(($(PORT_RANGE_START) + 3)))
 
 ## Help
 .PHONY: help
@@ -43,6 +47,10 @@ help: ## Show this help message
 	@echo "  1. make install    # Install all dependencies"
 	@echo "  2. make list-apps  # See all available apps"
 	@echo "  3. make dev        # Start all apps, or dev-<app> for specific"
+	@echo ""
+	@echo "$(YELLOW)Configuration:$(NC)"
+	@echo "  PORT_RANGE_START=4000 make dev     # Use custom port range (default: 3000)"
+	@echo "  NEXT_PUBLIC_BASE_URL=https://your-domain.com make build  # Set production base URL"
 
 ## Installation & Setup
 .PHONY: install
@@ -72,7 +80,7 @@ dev: ## Start all applications in development mode
 		fi; \
 	done
 	@echo ""
-	@$(TURBO) dev
+	@TURBO_FORCE=true PORT_RANGE_START=$(PORT_RANGE_START) NEXT_PUBLIC_PORT_RANGE_START=$(PORT_RANGE_START) PORT_platform=$(PORT_RANGE_START) PORT_benchmark=$(shell echo $$(($(PORT_RANGE_START) + 1))) PORT_csrd=$(shell echo $$(($(PORT_RANGE_START) + 2))) PORT_support=$(shell echo $$(($(PORT_RANGE_START) + 3))) $(TURBO) dev
 
 # Pattern rule for dev-<product>
 .PHONY: dev-%

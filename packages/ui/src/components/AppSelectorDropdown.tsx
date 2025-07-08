@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { getAppConfigs, getCurrentAppId, type AppConfig, type AppFunction } from '@digital-platform/config';
+import { 
+  getFilteredAppConfigs, 
+  getCurrentAppId, 
+  getCurrentUser,
+  type AppConfig, 
+  type AppFunction 
+} from '@digital-platform/config';
 
 interface AppSelectorDropdownProps {
   className?: string;
@@ -18,19 +24,18 @@ export const AppSelectorDropdown: React.FC<AppSelectorDropdownProps> = ({ classN
   const [visibleItems, setVisibleItems] = useState(50);
   const [currentAppId, setCurrentAppId] = useState<string>('platform'); // Default to platform
   const [isHydrated, setIsHydrated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  const apps = getAppConfigs();
+  // Get filtered apps based on user permissions
+  const apps = useMemo(() => {
+    return user ? getFilteredAppConfigs(user) : getFilteredAppConfigs();
+  }, [user]);
+  
   const currentApp = apps.find(app => app.id === currentAppId) || apps[0];
-
-  // Detect current app only after hydration
-  useEffect(() => {
-    setCurrentAppId(getCurrentAppId());
-    setIsHydrated(true);
-  }, []);
 
   // Filtere und sortiere Apps und Funktionen basierend auf Suchbegriff
   const filteredItems = useMemo(() => {
@@ -101,6 +106,13 @@ export const AppSelectorDropdown: React.FC<AppSelectorDropdownProps> = ({ classN
     }
   }, [isOpen]);
 
+  // Detect current app and user only after hydration
+  useEffect(() => {
+    setCurrentAppId(getCurrentAppId());
+    setUser(getCurrentUser());
+    setIsHydrated(true);
+  }, []);
+
   // Infinite Scroll für Performance
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -136,6 +148,16 @@ export const AppSelectorDropdown: React.FC<AppSelectorDropdownProps> = ({ classN
       ) : part
     );
   };
+
+  // Don't render until hydrated to prevent mismatch
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gray-300 rounded-md animate-pulse"></div>
+        <div className="hidden sm:block h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+      </div>
+    );
+  }
 
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
@@ -226,15 +248,20 @@ export const AppSelectorDropdown: React.FC<AppSelectorDropdownProps> = ({ classN
                 ) : (
                   displayedItems.map((item, index) => {
                     if (item.type === 'app') {
+                      const isCurrentApp = item.app.id === currentAppId;
+                      const isClickable = item.app.isClickable !== false;
+                      
                       return (
                         <div
                           key={`app-${item.app.id}-${index}`}
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-left ${
-                            item.app.id === currentAppId
+                            isCurrentApp
                               ? 'bg-blue-50 cursor-default'
-                              : 'hover:bg-gray-50 cursor-pointer'
+                              : isClickable
+                              ? 'hover:bg-gray-50 cursor-pointer'
+                              : 'opacity-60 cursor-not-allowed'
                           }`}
-                          onClick={() => item.app.id !== currentAppId && handleAppSelect(item.app.url)}
+                          onClick={() => !isCurrentApp && isClickable && handleAppSelect(item.app.url)}
                         >
                           <div className={`flex items-center justify-center w-8 h-8 bg-gradient-to-r ${item.app.gradient || 'bg-blue-500'} rounded-lg`}>
                             <span className="text-white text-sm">{item.app.icon}</span>
@@ -242,16 +269,31 @@ export const AppSelectorDropdown: React.FC<AppSelectorDropdownProps> = ({ classN
                           <div className="flex-1">
                             <div className="font-medium text-gray-900 flex items-center gap-2">
                               {highlightMatch(item.app.name, searchTerm)}
-                              {item.app.id === currentAppId && (
+                              {isCurrentApp && (
                                 <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
                                   Aktiv
+                                </span>
+                              )}
+                              {!isClickable && (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                  Nur Funktionen
                                 </span>
                               )}
                             </div>
                             <div className="text-xs text-gray-500">
                               {highlightMatch(item.app.description, searchTerm)}
                             </div>
+                            {item.app.functions && item.app.functions.length > 0 && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                {item.app.functions.length} Funktion{item.app.functions.length !== 1 ? 'en' : ''} verfügbar
+                              </div>
+                            )}
                           </div>
+                          {isClickable && !isCurrentApp && (
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          )}
                         </div>
                       );
                     } else {

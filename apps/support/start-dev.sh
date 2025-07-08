@@ -1,0 +1,4 @@
+#!/bin/bash
+PORT_RANGE_START=${PORT_RANGE_START:-3000}
+SUPPORT_PORT=${PORT_support:-$((PORT_RANGE_START + 3))}
+next dev --port $SUPPORT_PORT

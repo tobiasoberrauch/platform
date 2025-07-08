@@ -1,6 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppSelectorDropdown } from './AppSelectorDropdown';
-import { getAppConfigs, getCurrentAppId, type AppFunction } from '@digital-platform/config';
+import { AdminPermissionManager } from './AdminPermissionManager';
+import { 
+  getFilteredAppConfigs, 
+  getCurrentAppId, 
+  getCurrentUser,
+  type AppConfig,
+  type AppFunction,
+  type Company,
+  type User,
+  getCurrentCompanyId,
+  getCompanies
+} from '@digital-platform/config';
 
 interface ImprovedNavbarProps {
   title?: string;
@@ -15,14 +26,16 @@ interface ImprovedNavbarProps {
 const ProductMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentAppId, setCurrentAppId] = useState<string>('platform'); // Default to platform
+  const [isHydrated, setIsHydrated] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  const apps = getAppConfigs();
-  const currentApp = apps.find(app => app.id === currentAppId) || apps[0];
+  const apps = getFilteredAppConfigs();
+  const currentApp = apps.find((app: AppConfig) => app.id === currentAppId) || apps[0];
   
   // Detect current app only after hydration
   useEffect(() => {
     setCurrentAppId(getCurrentAppId());
+    setIsHydrated(true);
   }, []);
   
   // Debug logging
@@ -49,6 +62,11 @@ const ProductMenu: React.FC = () => {
     window.location.href = functionUrl;
     setIsOpen(false);
   };
+
+  // Don't render anything until hydrated to prevent mismatch
+  if (!isHydrated) {
+    return null;
+  }
 
   // Show debug info if no functions available
   if (!currentApp.functions || currentApp.functions.length === 0) {
@@ -127,8 +145,8 @@ const FunctionLinks: React.FC = () => {
   const [currentAppId, setCurrentAppId] = useState<string>('platform'); // Default to platform
   const [isHydrated, setIsHydrated] = useState(false);
   
-  const apps = getAppConfigs();
-  const currentApp = apps.find(app => app.id === currentAppId) || apps[0];
+  const apps = getFilteredAppConfigs();
+  const currentApp = apps.find((app: AppConfig) => app.id === currentAppId) || apps[0];
   
   // Detect current app only after hydration
   useEffect(() => {
@@ -152,7 +170,7 @@ const FunctionLinks: React.FC = () => {
 
   return (
     <div className="flex items-center space-x-1">
-      {currentApp.functions.map((func: AppFunction, index) => (
+      {currentApp.functions.map((func: AppFunction, index: number) => (
         <React.Fragment key={func.id}>
           {index > 0 && (
             <span className="text-gray-300 mx-1">|</span>
@@ -170,17 +188,76 @@ const FunctionLinks: React.FC = () => {
   );
 };
 
-export const ImprovedNavbar: React.FC<ImprovedNavbarProps> = ({ 
-  title = 'Digital Platform',
-  user = { name: 'John Doe', email: 'john@example.com', role: 'user' }
-}) => {
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+const CompanyIndicator: React.FC = () => {
+  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+    const companyId = getCurrentCompanyId();
+    const companies = getCompanies();
+    const company = companies.find((c: Company) => c.id === companyId);
+    setCurrentCompany(company || null);
+  }, []);
+
+  if (!isHydrated || !currentCompany) {
+    return null;
+  }
 
   return (
+    <span className="text-xs text-gray-600">Firma: {currentCompany.name}</span>
+  );
+};
+
+export const ImprovedNavbar: React.FC<ImprovedNavbarProps> = ({ 
+  title = 'Digital Platform',
+  user: propUser
+}) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Use real user from config system or fallback to prop user
+  useEffect(() => {
+    const realUser = getCurrentUser();
+    setCurrentUser(realUser);
+    setIsHydrated(true);
+  }, []);
+
+  const user = currentUser || propUser || { 
+    name: 'John Doe', 
+    email: 'john@example.com', 
+    role: 'user' as const,
+    id: 'default-user',
+    permissions: [],
+    companyId: 'konstruktiv',
+    isActive: true
+  };
+
+  // Don't render user-specific content until hydrated
+  if (!isHydrated) {
+    return (
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-6">
+              <AppSelectorDropdown />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  return (
+    <>
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left Side: Logo + App Selector + Function Links */}
           <div className="flex items-center space-x-6">
             <AppSelectorDropdown />
             <FunctionLinks />
@@ -195,11 +272,12 @@ export const ImprovedNavbar: React.FC<ImprovedNavbarProps> = ({
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user.avatar || user.name.charAt(0).toUpperCase()}
+                  {(user as any).avatar || user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden lg:block text-left">
                   <div className="text-sm font-medium text-gray-900">{user.name}</div>
                   <div className="text-xs text-gray-500">{user.role === 'admin' ? 'Administrator' : 'User'}</div>
+                  <div className='text-xs'><CompanyIndicator /></div>
                 </div>
                 <svg className="hidden sm:block w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -235,6 +313,18 @@ export const ImprovedNavbar: React.FC<ImprovedNavbarProps> = ({
                           </svg>
                           <span className="text-sm text-gray-700">Admin Dashboard</span>
                         </a>
+                        <button 
+                          onClick={() => {
+                            setShowAdminPanel(true);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                          </svg>
+                          <span className="text-sm text-gray-700">App Berechtigungen</span>
+                        </button>
                       </>
                     )}
                     <div className="my-2 border-t border-gray-100"></div>
@@ -252,5 +342,15 @@ export const ImprovedNavbar: React.FC<ImprovedNavbarProps> = ({
         </div>
       </div>
     </header>
+
+    {/* Admin Permission Manager Modal */}
+    {showAdminPanel && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+          <AdminPermissionManager onClose={() => setShowAdminPanel(false)} />
+        </div>
+      </div>
+    )}
+    </>
   );
 };

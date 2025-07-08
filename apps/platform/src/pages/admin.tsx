@@ -1,10 +1,26 @@
 import type { NextPage } from 'next';
 import { ImprovedLayout } from '@digital-platform/ui';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCompanies, getCurrentCompanyId, setCurrentCompanyId, type Company } from '@digital-platform/config';
 
 const AdminPage: NextPage = () => {
   const [activeSection, setActiveSection] = useState('overview');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [isHydrated, setIsHydrated] = useState(false);
   
+  useEffect(() => {
+    setIsHydrated(true);
+    setCompanies(getCompanies());
+    setSelectedCompany(getCurrentCompanyId());
+  }, []);
+
+  const handleCompanyChange = (companyId: string) => {
+    setSelectedCompany(companyId);
+    setCurrentCompanyId(companyId);
+    window.location.reload();
+  };
+
   const adminUser = {
     name: 'Admin User',
     email: 'admin@example.com',
@@ -23,6 +39,7 @@ const AdminPage: NextPage = () => {
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'users', label: 'User Management', icon: '👥' },
     { id: 'products', label: 'Product Settings', icon: '📱' },
+    { id: 'companies', label: 'Company Settings', icon: '🏢' }, // Neu hinzugefügt
     { id: 'security', label: 'Security', icon: '🔒' },
     { id: 'integrations', label: 'Integrations', icon: '🔌' },
     { id: 'logs', label: 'Activity Logs', icon: '📋' },
@@ -229,6 +246,114 @@ const AdminPage: NextPage = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'companies' && (
+              <div className="space-y-6">
+                <h1 className="text-2xl font-bold text-gray-900">Firmeneinstellungen</h1>
+                
+                {/* Aktuelle Firmenauswahl */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Aktive Firma</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Firma auswählen
+                      </label>
+                      {isHydrated && (
+                        <select
+                          value={selectedCompany}
+                          onChange={(e) => handleCompanyChange(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {companies.map((company) => (
+                            <option key={company.id} value={company.id}>
+                              {company.displayName}
+                              {company.type === 'subsidiary' && ' (Tochtergesellschaft)'}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    
+                    {/* Firmen-Details */}
+                    {isHydrated && selectedCompany && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        {(() => {
+                          const company = companies.find(c => c.id === selectedCompany);
+                          if (!company) return null;
+                          
+                          return (
+                            <div>
+                              <h3 className="font-medium text-gray-900 mb-2">{company.displayName}</h3>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-600">Typ:</span>
+                                  <span className="ml-2 font-medium">
+                                    {company.type === 'parent' ? 'Muttergesellschaft' : 'Tochtergesellschaft'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Theme:</span>
+                                  <span className="ml-2 font-medium">{company.settings.theme}</span>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="text-gray-600">Verfügbare Features:</span>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {company.settings.features?.map((feature) => (
+                                      <span key={feature} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                        {feature}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()} {/* Diese schließende Klammer war das Problem */}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Firmenverwaltung */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Alle Firmen</h2>
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Neue Firma hinzufügen
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {companies.map((company) => (
+                      <div key={company.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <span className="text-lg">🏢</span>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{company.displayName}</h3>
+                            <p className="text-sm text-gray-600">
+                              {company.type === 'parent' ? 'Muttergesellschaft' : 'Tochtergesellschaft'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            company.id === selectedCompany 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {company.id === selectedCompany ? 'Aktiv' : 'Inaktiv'}
+                          </span>
+                          <button className="text-blue-600 hover:text-blue-700 text-sm">Bearbeiten</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

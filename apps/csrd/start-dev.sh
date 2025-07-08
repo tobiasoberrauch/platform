@@ -1,0 +1,4 @@
+#!/bin/bash
+PORT_RANGE_START=${PORT_RANGE_START:-3000}
+CSRD_PORT=${PORT_csrd:-$((PORT_RANGE_START + 2))}
+next dev --port $CSRD_PORT

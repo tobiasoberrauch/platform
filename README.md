@@ -2,10 +2,10 @@
 
 A modern web platform built with Turborepo containing three digital products:
 
-- **Platform** (Port 3000) - Main entry point for product selection
-- **Benchmark** (Port 3001) - Performance benchmarking and analytics
-- **CSRD** (Port 3002) - Corporate Sustainability Reporting Directive compliance
-- **Support** (Port 3003) - Customer support and ticketing system
+- **Platform** - Main entry point for product selection
+- **Benchmark** - Performance benchmarking and analytics
+- **CSRD** - Corporate Sustainability Reporting Directive compliance
+- **Support** - Customer support and ticketing system
 
 ## Features
 
@@ -20,10 +20,10 @@ A modern web platform built with Turborepo containing three digital products:
 
 ```
 apps/
-  ├── platform/     # Main entry point (localhost:3000)
-  ├── benchmark/    # Performance metrics (localhost:3001)
-  ├── csrd/         # Sustainability reporting (localhost:3002)
-  └── support/      # Customer support (localhost:3003)
+  ├── platform/     # Main entry point
+  ├── benchmark/    # Performance metrics  
+  ├── csrd/         # Sustainability reporting
+  └── support/      # Customer support
 
 packages/
   ├── ui/           # Shared React components
@@ -97,14 +97,37 @@ If you prefer manual installation or the automated script fails:
 make dev
 ```
 
+#### Configuration
+
+**Port Range (Development):**
+```bash
+# Default ports: 3000-3003
+make dev
+
+# Custom port range: 4000-4003
+PORT_RANGE_START=4000 make dev
+
+# Custom port range: 8000-8003
+PORT_RANGE_START=8000 make dev
+```
+
+**Production Base URL:**
+```bash
+# Default production URL: https://platform.yourcompany.com
+make build
+
+# Custom production URL
+NEXT_PUBLIC_BASE_URL=https://app.clevercompany.ai make build
+```
+
 #### Individual Apps
 
 ```bash
 # Start individual applications
-make dev-platform     # Platform only (localhost:3000)
-make dev-benchmark    # Benchmark only (localhost:3001)
-make dev-csrd         # CSRD only (localhost:3002)
-make dev-support      # Support only (localhost:3003)
+make dev-platform     # Platform only
+make dev-benchmark    # Benchmark only
+make dev-csrd         # CSRD only  
+make dev-support      # Support only
 ```
 
 #### Manual Development
@@ -139,7 +162,7 @@ make dev-support      # Support only (localhost:3003)
 
 ### Usage
 
-1. **Start with the Platform** (http://localhost:3000)
+1. **Start with the Platform** (default: http://localhost:3000, configurable with PORT_RANGE_START)
    - Main entry point with product selector
    - Click on any product card to launch it
    - Use quick access buttons for navigation
@@ -151,17 +174,17 @@ make dev-support      # Support only (localhost:3003)
 
 3. **Product Features:**
 
-   **📊 Benchmark (localhost:3001)**
+   **📊 Benchmark (port 3001 by default, configurable)**
    - Performance monitoring dashboard
    - Real-time metrics and analytics
    - System benchmarking tools
 
-   **🌱 CSRD (localhost:3002)**
+   **🌱 CSRD (port 3002 by default, configurable)**
    - ESG metrics tracking
    - Sustainability reporting
    - Compliance monitoring
 
-   **🛠️ Support (localhost:3003)**
+   **🛠️ Support (port 3003 by default, configurable)**
    - Customer support tickets
    - Team performance metrics
    - Ticket management system
@@ -246,6 +269,24 @@ Each product includes a header navigation that allows users to:
 
 The platform serves as the main hub where users can discover and launch products with detailed descriptions and visual cards.
 
+## Production Deployment
+
+For detailed production deployment instructions including server setup, SSL configuration, process management, and monitoring, see:
+
+**📋 [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md)** - Complete step-by-step production deployment guide for `https://app.clevercompany.ai`
+
+Quick reference for production:
+```bash
+# Set production URL and build
+NEXT_PUBLIC_BASE_URL=https://app.clevercompany.ai make build
+
+# The apps will be accessible at:
+# - Platform: https://app.clevercompany.ai
+# - Benchmark: https://app.clevercompany.ai/benchmark  
+# - CSRD: https://app.clevercompany.ai/csrd
+# - Support: https://app.clevercompany.ai/support
+```
+
 ## Development Notes
 
 - All apps share the same UI component library
@@ -253,3 +294,4 @@ The platform serves as the main hub where users can discover and launch products
 - Each app runs on a different port for parallel development
 - Product selector enables seamless navigation between apps
 - Modern responsive design with consistent styling
+- Port range is configurable with `PORT_RANGE_START` environment variable

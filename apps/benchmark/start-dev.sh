@@ -1,0 +1,4 @@
+#!/bin/bash
+PORT_RANGE_START=${PORT_RANGE_START:-3000}
+BENCHMARK_PORT=${PORT_benchmark:-$((PORT_RANGE_START + 1))}
+next dev --port $BENCHMARK_PORT

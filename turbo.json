@@ -4,14 +4,16 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["NEXT_PUBLIC_BASE_URL", "BASE_URL"]
     },
     "lint": {
       "dependsOn": ["^lint"]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["PORT", "PORT_platform", "PORT_benchmark", "PORT_csrd", "PORT_support", "PORT_RANGE_START", "NEXT_PUBLIC_PORT_RANGE_START", "NEXT_PUBLIC_BASE_URL", "BASE_URL"]
     },
     "clean": {
       "cache": false

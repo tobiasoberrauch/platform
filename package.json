@@ -25,5 +25,9 @@
     "turbo": "latest",
     "typescript": "^5.2.0"
   },
-  "packageManager": "npm@9.0.0"
+  "packageManager": "npm@9.0.0",
+  "dependencies": {
+    "@next-auth/supabase-adapter": "^0.2.1",
+    "next-auth": "^4.24.11"
+  }
 }
