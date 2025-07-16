@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { 
-  ModernLayout, 
   ProductFeatureCard, 
   StatsCard, 
   ChartCard,
@@ -10,6 +9,7 @@ import {
   StatsIcon
 } from '@digital-platform/ui';
 import { getAppConfigs, type AppConfig } from '@digital-platform/config';
+import { AuthenticatedLayout } from '../components/auth';
 
 // Filter out the platform app itself from the product list
 const products: AppConfig[] = getAppConfigs().filter(app => app.id !== 'platform');
@@ -28,16 +28,11 @@ export default function HomePage() {
     }
   };
 
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'user' as const,
-  };
-
   return (
-    <ModernLayout title="CleverCompany" user={user}>
-      {/* Hero Section with Product Features */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <AuthenticatedLayout title="CleverCompany">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section with Product Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <ProductFeatureCard
           title="All Products"
           description="Browse our comprehensive digital workspace solutions"
@@ -119,7 +114,8 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </ChartCard>
-    </ModernLayout>
+        </ChartCard>
+      </div>
+    </AuthenticatedLayout>
   );
 }

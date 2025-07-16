@@ -1,6 +1,7 @@
 import type { NextPage } from 'next';
-import { ImprovedLayout } from '@digital-platform/ui';
+import { AuthenticatedLayout } from '../components/auth';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { getCompanies, getCurrentCompanyId, setCurrentCompanyId, type Company } from '@digital-platform/config';
 
 const AdminPage: NextPage = () => {
@@ -8,6 +9,7 @@ const AdminPage: NextPage = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const { data: session } = useSession();
   
   useEffect(() => {
     setIsHydrated(true);
@@ -21,12 +23,8 @@ const AdminPage: NextPage = () => {
     window.location.reload();
   };
 
-  const adminUser = {
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'admin' as const,
-    avatar: 'AD',
-  };
+  // Use actual authenticated user
+  const user = session?.user;
 
   const stats = {
     totalUsers: 1234,
@@ -47,7 +45,7 @@ const AdminPage: NextPage = () => {
   ];
 
   return (
-    <ImprovedLayout title="Admin Dashboard" showProductSelector={true} user={adminUser}>
+    <AuthenticatedLayout title="Admin Dashboard" showProductSelector={true}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
@@ -125,6 +123,36 @@ const AdminPage: NextPage = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Authenticated User Info */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Admin User</h2>
+                  {user ? (
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        {user.image ? (
+                          <img src={user.image} alt={user.name || 'User'} className="w-full h-full rounded-full" />
+                        ) : (
+                          user.name?.charAt(0).toUpperCase() || 'U'
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-medium text-gray-900">{user.name || 'Unknown User'}</h3>
+                        <p className="text-sm text-gray-600">{user.email || 'No email'}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                            {user.email?.includes('admin') ? 'Administrator' : 'User'}
+                          </span>
+                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            Active Session
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">No user session found</div>
+                  )}
                 </div>
 
                 {/* Recent Activity */}
@@ -403,7 +431,7 @@ const AdminPage: NextPage = () => {
           </main>
         </div>
       </div>
-    </ImprovedLayout>
+    </AuthenticatedLayout>
   );
 };
 

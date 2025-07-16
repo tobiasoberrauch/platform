@@ -7,5 +7,8 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ['react', 'react-dom'],
+  target: 'es2018',
+  external: ['react', 'react-dom', 'next-auth', 'next-auth/react', 'next/router'],
+  treeshake: true,
+  minify: false,
 });
